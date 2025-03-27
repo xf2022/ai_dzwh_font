@@ -17,6 +17,9 @@ let _history: ReturnType<typeof writable<Chat[]>>;
 export const getSessionId = () => {
     if (!_sessionId) {
         _sessionId = writable<string>('');
+        _sessionId.subscribe((sid) => {
+            setHistory([]);
+        });
     }
     return _sessionId
 }
@@ -67,6 +70,6 @@ export const addUserChat = (chat: string) => {
     addHistory({ role: "user", content: chat });
 }
 
-export const addAssistantChat = (chat: Conversation) => {
+export const addAssistantChat = (chat: string | Conversation) => {
     addHistory({ role: "assistant", content: chat });
 }

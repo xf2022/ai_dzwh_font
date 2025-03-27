@@ -8,6 +8,6 @@ export const GET: RequestHandler = async ({ fetch, params }: RequestEvent) => {
     if (!response.ok) error(response.status, response.statusText)
 
     const data: GetRunSQLResponse = await response.json()
-
-    return new Response(JSON.stringify({ id: data['id'] ?? '', df: data['df'] ?? '' }))
+    console.log(data)
+    return new Response(JSON.stringify({ id: data['id'] ?? '', df: JSON.parse(data['df']) ?? '' }))
 }

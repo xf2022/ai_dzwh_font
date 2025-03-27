@@ -1,9 +1,9 @@
 <script lang="ts">
     import type { Conversation } from "$lib/types";
+    import { toggleLoadingChat } from "$stores/conversation";
 
     import {
         getSessionId,
-        setSessionId,
         add_session,
         TODAY,
         addUserChat,
@@ -18,7 +18,7 @@
     let conversationHistory: Conversation[] = [];
 
     const sendQuestioin = async () => {
-        debugger;
+        toggleLoadingChat();
         if ("" === get(sessionId)) {
             const sid = crypto.randomUUID();
             const name = questionInput.slice(0, 30);
@@ -34,28 +34,10 @@
         // 发送请求到后端
         try {
             let questionStr = questionInput.toString();
-            let talk = true;
-            let response_timeout = false;
-            conversationHistory.push({
-                id: "",
-                question: questionStr,
-                response: "",
-                showResponse: false,
-                tableHeaders: [],
-                showPd: false,
-                pdData: null,
-                showChart: false,
-                chartData: "",
-                summary: "",
-                isSelected: false,
-            });
-            conversationHistory = [...conversationHistory]; //这里更新界面，展示思考中的动画
 
             const conversation: Conversation = {
                 id: "",
-                question: questionStr,
                 response: "",
-                showResponse: false,
                 tableHeaders: [],
                 showPd: false,
                 pdData: null,
@@ -72,22 +54,21 @@
             const data: { id: string; sql: string; text: string } =
                 await response.json();
             conversation.id = data.id;
-            conversation.question = questionStr;
             conversation.response = data.text;
 
             if (data.sql !== "") {
                 const pd_resp = await fetch(
                     `/api/chat_sql/${encodeURIComponent(data.id)}`,
                 );
-                const pd_data: { id: string; pd: any } = await pd_resp.json();
-                if (pd_data.pd.length > 0) {
+                const pd_data: { id: string; df: any } = await pd_resp.json();
+                if (pd_data.df.length > 0) {
                     conversation.tableHeaders =
-                        Object.keys(pd_data.pd[0]) ?? [];
-                    conversation.pdData = pd_data.pd;
+                        Object.keys(pd_data.df[0]) ?? [];
+                    conversation.pdData = pd_data.df;
                     conversation.showPd = true;
                 }
 
-                if (pd_data.pd) {
+                if (pd_data.df) {
                     const chart_resp = await fetch(
                         `/api/plotly/${encodeURIComponent(data.id)}?question=${encodeURIComponent(questionInput)}`,
                     );
@@ -102,13 +83,27 @@
 
                     conversation.summary = chart_data.summary;
                 }
+                addUserChat(questionStr);
+                addAssistantChat(conversation);
+            } else {
+                addUserChat(questionStr);
+                addAssistantChat(data.text);
             }
 
-            addUserChat(questionStr);
-            addAssistantChat(conversation);
+            fetch("/api/sessions/chat", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    user: questionStr,
+                    assistant: data.sql !== "" ? conversation : data.text,
+                }),
+            });
         } catch (error) {
             console.error("Fetch错误:", error);
         }
+        toggleLoadingChat();
 
         return null;
     };
@@ -151,10 +146,10 @@
     }
 </script>
 
-<footer
-    class="py-10 lg:py-14 max-w-4xl mx-auto sticky bottom-0 z-10 p-3 sm:py-6"
->
-    <div class="relative">
+<footer class="py-4 lg:py-8 max-w-4xl mx-auto p-3 sm:py-2 w-full">
+    <div
+        class="relative gap-4 md:gap-5 lg:gap-6 md:max-w-3xl lg:max-w-[40rem] xl:max-w-[48rem]"
+    >
         <input
             type="text"
             bind:value={questionInput}

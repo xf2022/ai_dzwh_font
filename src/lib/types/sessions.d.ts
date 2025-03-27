@@ -1,13 +1,9 @@
 export interface Conversation {
     id: string,
-    question: string,
-
-    showResponse: boolean,
     response: string,
-
     tableHeaders: string[],
     showPd: boolean,
-    pdData: [{ [key: string]: string }] | null,
+    pdData: [{ [key: string], string }] | null,
 
     showChart: boolean,
     chartData: string,

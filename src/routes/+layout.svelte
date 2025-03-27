@@ -3,22 +3,25 @@
     import type { Snippet } from "svelte";
     import type { LayoutData } from "./$types";
     import { setSessions } from "$stores/sessionStore";
+    import Header from "$lib/Header.svelte";
 
-    let { data, children }: { data: LayoutData, children: Snippet } = $props();
+    let { data, children }: { data: LayoutData; children: Snippet } = $props();
     const { sessions } = data;
     setSessions(sessions);
     // console.log(data);
-    let title = "国能AI"
+    let title = "国能AI";
 </script>
 
 <svelte:head>
-    <title>{ title }</title>
+    <title>{title}</title>
 </svelte:head>
 
-<div class="layout">
-    <Navbar />
-</div>
-
-<main class="py-10 lg:py-14">
-    {@render children()}
+<main class="flex h-screen w-full flex-col flex-1">
+    <div class="relative flex h-full w-full flex-row overflow-hidden">
+        <Navbar />
+        <div class="flex flex-col flex-1">
+            <Header />
+            {@render children()}
+        </div>
+    </div>
 </main>

@@ -10,5 +10,5 @@ export const GET: RequestHandler = async ({ fetch, params, url }: RequestEvent) 
 
     const data: GetGenerateChartResponse = await response.json()
 
-    return new Response(JSON.stringify({ id: data['id'], fig: data['fig'] ?? '', summary: data['summary'] ?? '' }))
+    return new Response(JSON.stringify({ id: data['id'], fig: JSON.parse(data['fig']) ?? '', summary: data['summary'] ?? '' }))
 }

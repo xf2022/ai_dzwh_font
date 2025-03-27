@@ -1,15 +1,25 @@
+body {
+    height: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+
 .nav-title {
     font-family: Roboto Slab, serif
 }
 
-*, :before, :after {
+*,
+:before,
+:after {
     box-sizing: border-box;
     border-width: 0;
     border-style: solid;
     border-color: #e5e7eb
 }
 
-:before, :after {
+:before,
+:after {
     --tw-content: ""
 }
 
@@ -40,7 +50,12 @@ abbr:where([title]) {
     text-decoration: underline dotted
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
     font-size: inherit;
     font-weight: inherit
 }
@@ -50,11 +65,15 @@ a {
     text-decoration: inherit
 }
 
-b, strong {
+b,
+strong {
     font-weight: bolder
 }
 
-code, kbd, samp, pre {
+code,
+kbd,
+samp,
+pre {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
     font-size: 1em
 }
@@ -63,7 +82,8 @@ small {
     font-size: 80%
 }
 
-sub, sup {
+sub,
+sup {
     font-size: 75%;
     line-height: 0;
     position: relative;
@@ -84,7 +104,11 @@ table {
     border-collapse: collapse
 }
 
-button, input, optgroup, select, textarea {
+button,
+input,
+optgroup,
+select,
+textarea {
     font-family: inherit;
     font-feature-settings: inherit;
     font-variation-settings: inherit;
@@ -96,11 +120,15 @@ button, input, optgroup, select, textarea {
     padding: 0
 }
 
-button, select {
+button,
+select {
     text-transform: none
 }
 
-button, [type=button], [type=reset], [type=submit] {
+button,
+[type=button],
+[type=reset],
+[type=submit] {
     -webkit-appearance: button;
     background-color: transparent;
     background-image: none
@@ -118,7 +146,8 @@ progress {
     vertical-align: baseline
 }
 
-::-webkit-inner-spin-button, ::-webkit-outer-spin-button {
+::-webkit-inner-spin-button,
+::-webkit-outer-spin-button {
     height: auto
 }
 
@@ -140,7 +169,19 @@ summary {
     display: list-item
 }
 
-blockquote, dl, dd, h1, h2, h3, h4, h5, h6, hr, figure, p, pre {
+blockquote,
+dl,
+dd,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+hr,
+figure,
+p,
+pre {
     margin: 0
 }
 
@@ -153,7 +194,9 @@ legend {
     padding: 0
 }
 
-ol, ul, menu {
+ol,
+ul,
+menu {
     list-style: none;
     margin: 0;
     padding: 0
@@ -167,17 +210,20 @@ textarea {
     resize: vertical
 }
 
-input::-moz-placeholder, textarea::-moz-placeholder {
+input::-moz-placeholder,
+textarea::-moz-placeholder {
     opacity: 1;
     color: #9ca3af
 }
 
-input::placeholder, textarea::placeholder {
+input::placeholder,
+textarea::placeholder {
     opacity: 1;
     color: #9ca3af
 }
 
-button, [role=button] {
+button,
+[role=button] {
     cursor: pointer
 }
 
@@ -185,12 +231,20 @@ button, [role=button] {
     cursor: default
 }
 
-img, svg, video, canvas, audio, iframe, embed, object {
+img,
+svg,
+video,
+canvas,
+audio,
+iframe,
+embed,
+object {
     display: block;
     vertical-align: middle
 }
 
-img, video {
+img,
+video {
     max-width: 100%;
     height: auto
 }
@@ -199,7 +253,9 @@ img, video {
     display: none
 }
 
-*, :before, :after {
+*,
+:before,
+:after {
     --tw-border-spacing-x: 0;
     --tw-border-spacing-y: 0;
     --tw-translate-x: 0;
@@ -640,7 +696,8 @@ img, video {
     flex: 1 1 auto
 }
 
-.flex-shrink-0, .shrink-0 {
+.flex-shrink-0,
+.shrink-0 {
     flex-shrink: 0
 }
 
@@ -658,10 +715,13 @@ img, video {
 }
 
 @keyframes bounce {
-    0%, to {
+
+    0%,
+    to {
         transform: translateY(-25%);
         animation-timing-function: cubic-bezier(.8, 0, 1, 1)
     }
+
     50% {
         transform: none;
         animation-timing-function: cubic-bezier(0, 0, .2, 1)
@@ -751,43 +811,43 @@ img, video {
     column-gap: .75rem
 }
 
-.-space-y-px > :not([hidden]) ~ :not([hidden]) {
+.-space-y-px> :not([hidden])~ :not([hidden]) {
     --tw-space-y-reverse: 0;
     margin-top: calc(-1px * calc(1 - var(--tw-space-y-reverse)));
     margin-bottom: calc(-1px * var(--tw-space-y-reverse))
 }
 
-.space-y-1 > :not([hidden]) ~ :not([hidden]) {
+.space-y-1> :not([hidden])~ :not([hidden]) {
     --tw-space-y-reverse: 0;
     margin-top: calc(.25rem * calc(1 - var(--tw-space-y-reverse)));
     margin-bottom: calc(.25rem * var(--tw-space-y-reverse))
 }
 
-.space-y-1\.5 > :not([hidden]) ~ :not([hidden]) {
+.space-y-1\.5> :not([hidden])~ :not([hidden]) {
     --tw-space-y-reverse: 0;
     margin-top: calc(.375rem * calc(1 - var(--tw-space-y-reverse)));
     margin-bottom: calc(.375rem * var(--tw-space-y-reverse))
 }
 
-.space-y-3 > :not([hidden]) ~ :not([hidden]) {
+.space-y-3> :not([hidden])~ :not([hidden]) {
     --tw-space-y-reverse: 0;
     margin-top: calc(.75rem * calc(1 - var(--tw-space-y-reverse)));
     margin-bottom: calc(.75rem * var(--tw-space-y-reverse))
 }
 
-.space-y-5 > :not([hidden]) ~ :not([hidden]) {
+.space-y-5> :not([hidden])~ :not([hidden]) {
     --tw-space-y-reverse: 0;
     margin-top: calc(1.25rem * calc(1 - var(--tw-space-y-reverse)));
     margin-bottom: calc(1.25rem * var(--tw-space-y-reverse))
 }
 
-.divide-y > :not([hidden]) ~ :not([hidden]) {
+.divide-y> :not([hidden])~ :not([hidden]) {
     --tw-divide-y-reverse: 0;
     border-top-width: calc(1px * calc(1 - var(--tw-divide-y-reverse)));
     border-bottom-width: calc(1px * var(--tw-divide-y-reverse))
 }
 
-.divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
+.divide-gray-200> :not([hidden])~ :not([hidden]) {
     --tw-divide-opacity: 1;
     border-color: rgb(229 231 235 / var(--tw-divide-opacity))
 }
@@ -1508,7 +1568,7 @@ img, video {
 }
 
 @media (prefers-color-scheme: dark) {
-    .dark\:divide-gray-700 > :not([hidden]) ~ :not([hidden]) {
+    .dark\:divide-gray-700> :not([hidden])~ :not([hidden]) {
         --tw-divide-opacity: 1;
         border-color: rgb(55 65 81 / var(--tw-divide-opacity))
     }
@@ -1799,7 +1859,8 @@ img, video {
 .toggle-switch {
     width: 40px;
     height: 20px;
-    background-color: #4caf50; /* 浅灰色背景 */
+    background-color: #4caf50;
+    /* 浅灰色背景 */
     border-radius: 20px;
     padding: 2px;
     position: relative;
@@ -1813,11 +1874,13 @@ img, video {
 .toggle-ball {
     width: 16px;
     height: 16px;
-    background-color: #ffffff; /* 白色小球 */
+    background-color: #ffffff;
+    /* 白色小球 */
     border-radius: 50%;
     position: absolute;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* 添加阴影效果 */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    /* 添加阴影效果 */
 }
 
 /* 小球位置 */

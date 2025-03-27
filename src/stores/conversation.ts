@@ -5,10 +5,10 @@ export interface Session {
     name: string
 };
 
-const _isLoading = writable(true);
+const _isLoading = writable(false);
 
 export const isLoadingChat = () => {
-    return get(_isLoading)
+    return _isLoading
 }
 
 export const toggleLoadingChat = () => {

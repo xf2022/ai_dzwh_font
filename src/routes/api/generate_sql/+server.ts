@@ -13,5 +13,5 @@ export const GET: RequestHandler = async ({ fetch, url }: RequestEvent) => {
 
     const data: GetGenerateSQLResponse = await response.json()
 
-    return new Response(JSON.stringify({ sql: data['sql_que'] ?? '', text: data['text'] ?? '' }))
+    return new Response(JSON.stringify({ id: data['id'] ?? '', sql: data['sql_que'] ?? '', text: data['text'] ?? '' }))
 }

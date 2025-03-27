@@ -189,13 +189,15 @@
 
 <div
     id="application-sidebar"
-    class="hs-overlay hs-overlay-open:translate-x-0 -translate-x-full transition-all duration-300 transform hidden fixed top-0 left-0 bottom-0 z-[60] w-64 bg-white border-r border-gray-200 overflow-y-auto scrollbar-y lg:block lg:translate-x-0 lg:right-auto lg:bottom-0 dark:scrollbar-y dark:bg-slate-900 dark:border-gray-700"
+    class="hs-overlay hs-overlay-open:translate-x-0 -translate-x-full transition-all duration-300 transform hidden z-[60] w-64
+    bg-white border-r border-gray-200 overflow-hidden lg:block lg:translate-x-0 lg:right-auto lg:bottom-0
+    dark:scrollbar-y dark:bg-slate-900 dark:border-gray-700"
 >
     <nav
         class="hs-accordion-group w-full h-full flex flex-col"
         data-hs-accordion-always-open=""
     >
-        <div class="flex items-center justify-between py-4 pr-4 pl-7">
+        <div class="flex items-center justify-between p-4">
             <img
                 class="w-35 h-auto"
                 src="/images/navbar/logo_large.png"
@@ -225,7 +227,7 @@
             </div>
         </div>
 
-        <div class="overflow-auto pb-64">
+        <div class="overflow-y-auto pb-64">
             <ul class="p-4">
                 <li>
                     <button

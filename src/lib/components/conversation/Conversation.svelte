@@ -2,13 +2,60 @@
     // const { history }: { history: Chat[] } = $props();
     import { getHistory } from "$stores/sessionStore";
 
+    let Plotly: any;
     const history = getHistory();
 
-    import axios from "axios";
     import { isLoadingChat, type Session } from "$stores/conversation";
-    import { onMount } from "svelte";
+    import { onMount, tick } from "svelte";
     import type { Conversation } from "$lib/types";
+    import { get } from "svelte/store";
 
+    const isLoading = isLoadingChat();
+
+    onMount(async () => {
+        Plotly = (await import("plotly.js-dist-min")).default;
+    });
+
+    function renderChart(id: string, chartData: any) {
+        const container = document.getElementById(`chart-container-${id}`);
+        console.log("开始渲染图表");
+        if (container && chartData) {
+            try {
+                Plotly.newPlot(
+                    container,
+                    chartData.data,
+                    chartData.layout || {},
+                ).then(() => {
+                    const logoButton =
+                        container.querySelector(".modebar-btn--logo");
+                    if (logoButton) {
+                        logoButton.remove();
+                    }
+                });
+            } catch (error) {
+                console.error("图表渲染失败:", error);
+            }
+        }
+    }
+
+    $: {
+        if (Plotly && $history && $history.length) {
+            $history.forEach((item) => {
+                const content = item.content;
+                if ("string" !== typeof content) {
+                    (async () => {
+                        await tick();
+                        const container = document.getElementById(
+                            `chart-container-${content.id}`,
+                        );
+                        if (container) {
+                            renderChart(content.id, content.chartData);
+                        }
+                    })();
+                }
+            });
+        }
+    }
     // 创建语音识别对象（支持的浏览器需要提供 Web Speech API）
     let recognition: any;
 
@@ -94,24 +141,17 @@
         // 开始播放语音
         synth.speak(utterance);
     }
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-        if (event.key === "Enter") {
-            // 调用生成 SQL 的处理函数
-            handleGenerateSQL();
-        }
-    };
 </script>
 
 <!--  lg:pl-64 -->
-<div id="chat-container" class="relative w-full">
-    <div class="py-10 lg:py-14">
+<div id="chat-container" class="relative max-w-full flex-1 overflow-y-auto">
+    <div class="py-5 lg:py-7">
         <ul class="mt-16 space-y-5">
             {#each $history as chat}
                 {#if "assistant" === chat.role}
                     {#if typeof chat.content === "string"}
                         <li
-                            class="max-w-4xl py-2 px-4 sm:px-6 lg:px-8 mx-auto flex gap-x-2 sm:gap-x-4"
+                            class="max-w-4xl py-2 px-4 sm:px-6 lg:px-8 mx-auto flex gap-4 md:gap-5 lg:gap-6 md:max-w-3xl lg:max-w-[40rem] xl:max-w-[48rem]"
                         >
                             <img
                                 src="/conversation/assistant.png"
@@ -137,7 +177,7 @@
                         </li>
                     {:else if chat.content.showPd}
                         <li
-                            class="max-w-4xl py-2 px-4 sm:px-6 lg:px-8 mx-auto flex gap-x-2 sm:gap-x-4"
+                            class="max-w-4xl py-2 px-4 sm:px-6 lg:px-8 mx-auto flex gap-4 md:gap-5 lg:gap-6 md:max-w-3xl lg:max-w-[40rem] xl:max-w-[48rem]"
                         >
                             <img
                                 src="/conversation/assistant.png"
@@ -246,8 +286,8 @@
                                                         d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"
                                                     ></path>
                                                 </svg>
-                                                下载</a
-                                            >
+                                                下载
+                                            </a>
                                         </div>
                                     </li>
                                 </ul>
@@ -255,7 +295,7 @@
                         </li>
                         {#if chat.content.showChart}
                             <li
-                                class="max-w-4xl py-2 px-4 sm:px-6 lg:px-8 mx-auto flex gap-x-2 sm:gap-x-4"
+                                class="max-w-4xl py-2 px-4 sm:px-6 lg:px-8 mx-auto flex gap-4 md:gap-5 lg:gap-6 md:max-w-3xl lg:max-w-[40rem] xl:max-w-[48rem]"
                             >
                                 <img
                                     src="/conversation/assistant.png"
@@ -269,7 +309,7 @@
                                 ></div>
                             </li>
                             <li
-                                class="max-w-4xl py-2 px-4 sm:px-6 lg:px-8 mx-auto flex gap-x-2 sm:gap-x-4"
+                                class="max-w-4xl py-2 px-4 sm:px-6 lg:px-8 mx-auto flex gap-4 md:gap-5 lg:gap-6 md:max-w-3xl lg:max-w-[40rem] xl:max-w-[48rem]"
                             >
                                 <img
                                     src="/conversation/assistant.png"
@@ -290,8 +330,11 @@
                                         class="mb-2.5 mr-1.5 py-2 px-3 inline-flex justify-center items-center gap-x-2 rounded-md border border-blue-600 bg-white text-blue-600 align-middle hover:bg-blue-50 text-sm dark:bg-slate-900 dark:text-blue-500 dark:border-blue-500 dark:hover:text-blue-400 dark:hover:border-blue-400"
                                         onclick={() =>
                                             playText(
-                                                chat.content.summary ||
-                                                    "此次查询没有得出结论",
+                                                "string" !== typeof chat.content
+                                                    ? (chat.content.summary ??
+                                                          "")
+                                                    : chat.content ||
+                                                          "此次查询没有得出结论",
                                             )}
                                     >
                                         播放
@@ -301,7 +344,9 @@
                         {/if}
                     {/if}
                 {:else}
-                    <li class="py-2 sm:py-4">
+                    <li
+                        class="py-2 sm:py-4 gap-4 md:gap-5 lg:gap-6 md:max-w-3xl lg:max-w-[40rem] xl:max-w-[48rem]"
+                    >
                         <div class="max-w-4xl px-4 sm:px-6 lg:px-8 mx-auto">
                             <div class="max-w-2xl flex gap-x-2 sm:gap-x-4">
                                 <span
@@ -323,26 +368,26 @@
                         </div>
                     </li>
                 {/if}
-                {#if isLoadingChat()}
-                    <li
-                        class="max-w-4xl py-2 px-4 sm:px-6 lg:px-8 mx-auto flex gap-x-2 sm:gap-x-4"
-                    >
-                        <img
-                            src="/conversation/assistant.png"
-                            class="flex-shrink-0 w-[2.375rem] h-[2.375rem] animate-bounce"
-                            alt="agent logo"
-                        />
-                        <div class="space-y-3">
-                            <!-- <p class="text-red-600 dark:text-red-400">
-                                    回答失败，请稍后重试。
-                                </p> -->
-                            <p class="text-gray-800 dark:text-gray-200">
-                                思考中...
-                            </p>
-                        </div>
-                    </li>
-                {/if}
             {/each}
+            {#if $isLoading}
+                <li
+                    class="max-w-4xl py-2 px-4 sm:px-6 lg:px-8 mx-auto flex gap-4 md:gap-5 lg:gap-6 md:max-w-3xl lg:max-w-[40rem] xl:max-w-[48rem]"
+                >
+                    <img
+                        src="/conversation/assistant.png"
+                        class="flex-shrink-0 w-[2.375rem] h-[2.375rem] animate-bounce"
+                        alt="agent logo"
+                    />
+                    <div class="space-y-3">
+                        <!-- <p class="text-red-600 dark:text-red-400">
+                                回答失败，请稍后重试。
+                            </p> -->
+                        <p class="text-gray-800 dark:text-gray-200">
+                            思考中...
+                        </p>
+                    </div>
+                </li>
+            {/if}
         </ul>
     </div>
 
@@ -388,7 +433,7 @@
                                     class="grow mt-2 space-y-3 overflow-x-auto overflow-y-hidden text-left"
                                 >
                                     <p class="text-gray-800 dark:text-gray-200">
-                                        {entry.question}
+                                        {entry.id}
                                     </p>
                                 </div>
                             </div>
@@ -402,7 +447,7 @@
                             {/if}
                         </div>
                     </li>
-                    {#if !entry.showResponse}
+                    {#if entry.showPd}
                         <li
                             class="max-w-4xl py-2 px-4 sm:px-6 lg:px-8 mx-auto flex gap-x-2 sm:gap-x-4"
                         >
