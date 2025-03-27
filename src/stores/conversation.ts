@@ -16,3 +16,4 @@ export interface Conversation {
     show_chart: boolean,
     chartData: string
 }
+

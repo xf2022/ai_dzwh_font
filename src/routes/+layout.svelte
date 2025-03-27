@@ -1,7 +1,14 @@
-<script>
+<script lang="ts">
     import Navbar from "$lib/Navbar.svelte";
+    import type { Snippet } from "svelte";
+    import type { LayoutData } from "./$types";
+    import { setSessions } from "$stores/sessionStore";
 
-    export let title = "国能AI"
+    let { data, children }: { data: LayoutData, children: Snippet } = $props();
+    const { sessions } = data;
+    setSessions(sessions);
+    // console.log(data);
+    let title = "国能AI"
 </script>
 
 <svelte:head>
@@ -9,8 +16,9 @@
 </svelte:head>
 
 <div class="layout">
-    <Navbar/>
-    <div class="py-10 lg:py-14">
-        <slot/>
-    </div>
+    <Navbar />
 </div>
+
+<main class="py-10 lg:py-14">
+    {@render children()}
+</main>
