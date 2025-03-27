@@ -1,23 +1,39 @@
 <script lang="ts">
-    import { add_session, getSessions, setSessionId, getSessionId, TODAY } from "$stores/sessionStore";
+    import {
+        add_session,
+        getSessions,
+        setSessionId,
+        getSessionId,
+        TODAY,
+    } from "$stores/sessionStore";
     import type { Session } from "$lib/types";
     import { goto } from "$app/navigation";
     import { get } from "svelte/store";
-    // const { sessions } = $props();
+
     const sessionId = getSessionId();
     const sessions = getSessions();
 
     function navigateToConversation(sid: string) {
         // 判断sid 是否为 sessionId
-        console.log(sid)
+        console.log(sid);
         if (sid === get(sessionId)) return;
         setSessionId(sid);
-        goto('/conversation', { state: { sid } });
+        goto(`/conversation/${sid}`);
     }
 
-
-
-
+    async function createSession() {
+        if ("" !== get(sessionId)) {
+            setSessionId("");
+            conversationHistory = [];
+        }
+        const sid = crypto.randomUUID();
+        const session_resp = await fetch(`/api/sessions/${sid}`, {
+            method: "POST",
+        });
+        const s: Session = await session_resp.json();
+        console.log(s);
+        add_session(TODAY, s);
+    }
 
     interface Conversation {
         id: number;
@@ -33,7 +49,6 @@
     let trainingData = [];
 
     let uid = "1"; // 假设这是你的用户 ID
-    let currSid: string = "";
 
     let conversationHistory: Conversation[] = []; // 存储对话记录
     let talk = false; //是否进入谈话界面
@@ -62,65 +77,10 @@
         }
     }
 
-    async function createSession() {
-        if (currSid !== "") {
-            currSid = "";
-            conversationHistory = [];
-        }
-        const sid = crypto.randomUUID();
-        const name = "新的提问";
-        const session_resp = await fetch(`/api/v0/session/${sid}/${name}`);
-        const session_data = await session_resp.json();
-        if (session_data.type === "session") {
-            currSid = session_data.sid;
-        }
-        // add_session(TODAY, { sid, name });
-    }
-
     // 取消生成报告
     function cancelReport() {
         showConfirm = false;
         showCheckbox = false; // 隐藏勾选框
-    }
-
-    async function clickSession({ sid }: Session) {
-        if (sid === currSid) {
-            return;
-        }
-        try {
-            currSid = sid;
-            const response = await fetch(`/api/v0/session/${sid}`);
-
-            const history_data = await response.json();
-            conversationHistory = [];
-            if (history_data.type === "history") {
-                let id = 0;
-                let conversation: Conversation = {
-                    id: id,
-                    question: "",
-                    response: "",
-                    show_response: false,
-                    selected: false,
-                    pd_data: null,
-                    summary: "",
-                };
-                for (const h of history_data.history) {
-                    if (h.role === "user") {
-                        conversation.question = h.content;
-                    }
-                    if (h.role === "assistant") {
-                        conversation.response = h.content;
-                        conversation.id = id++;
-                        conversation.show_response = true;
-                        conversationHistory.push(conversation);
-                    }
-                }
-            }
-            talk = true;
-        } catch (error) {
-            console.error("Fetch错误:", error);
-            errorMessage = "请求失败，请稍后重试。"; // 设置错误信息
-        }
     }
 
     // 生成报告
@@ -259,13 +219,13 @@
                         <path
                             d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z"
                         ></path>
-                    </svg>
+                    </svg>+
                     <span class="sr-only">Sidebar</span></button
                 >
             </div>
         </div>
 
-        <div class="h-full">
+        <div class="overflow-auto pb-64">
             <ul class="p-4">
                 <li>
                     <button
@@ -328,7 +288,8 @@
                         >
                             <button
                                 class="relative flex w-full"
-                                onclick={() => navigateToConversation(session?.sid)}
+                                onclick={() =>
+                                    navigateToConversation(session?.sid)}
                             >
                                 {session?.name}
                             </button>
@@ -347,7 +308,8 @@
                         >
                             <button
                                 class="relative flex w-full"
-                                onclick={() => navigateToConversation(session?.sid)}
+                                onclick={() =>
+                                    navigateToConversation(session?.sid)}
                             >
                                 {session?.name}
                             </button>
@@ -366,7 +328,8 @@
                         >
                             <button
                                 class="relative flex w-full"
-                                onclick={() => navigateToConversation(session?.sid)}
+                                onclick={() =>
+                                    navigateToConversation(session?.sid)}
                             >
                                 {session?.name}
                             </button>
@@ -385,7 +348,8 @@
                         >
                             <button
                                 class="relative flex w-full"
-                                onclick={() => navigateToConversation(session?.sid)}
+                                onclick={() =>
+                                    navigateToConversation(session?.sid)}
                             >
                                 {session?.name}
                             </button>
@@ -404,7 +368,8 @@
                         >
                             <button
                                 class="relative flex w-full"
-                                onclick={() => clickSession(session)}
+                                onclick={() =>
+                                    navigateToConversation(session?.sid)}
                             >
                                 {session?.name}
                             </button>
@@ -414,7 +379,7 @@
             </ul>
         </div>
 
-        <div class="mt-auto">
+        <div class="sticky bottom-0 z-10 bg-white dark:bg-gray-800">
             <ul>
                 <!-- 生成报告按钮 -->
                 <li class="relative">
@@ -507,7 +472,7 @@
                 <li>
                     <button
                         class="flex items-center gap-x-3 py-2 px-3 text-sm text-slate-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-900 dark:text-slate-400 dark:hover:text-slate-300 border-t border-b border-gray-200 dark:border-gray-700 w-full"
-                        onclick={ toggleMode }
+                        onclick={toggleMode}
                     >
                         <div
                             class="mode-text {mode === 'database'

@@ -1,19 +1,17 @@
+import { get, writable } from "svelte/store"
+
 export interface Session {
     sid: string,
     name: string
 };
-export interface Conversation {
-    id: number,
-    question: string,
-    response: string,
-    show_response: boolean,
-    selected: boolean,
-    pd_data: [{ [key: string]: string }] | null,
-    summary: string | null,
-    show_pd: boolean,
-    tableHeaders: string[],
 
-    show_chart: boolean,
-    chartData: string
+const _isLoading = writable(true);
+
+export const isLoadingChat = () => {
+    return get(_isLoading)
+}
+
+export const toggleLoadingChat = () => {
+    _isLoading.update(isLoading => !isLoading)
 }
 
