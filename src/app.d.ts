@@ -5,7 +5,9 @@ declare global {
 		// interface Error {}
 		// interface Locals {}
 		// interface PageData {}
-		// interface PageState {}
+		interface PageState {
+			question: string;
+		}
 		// interface Platform {}
 	};
 	interface Window {
@@ -14,4 +16,4 @@ declare global {
 	}
 }
 
-export {};
+export { };

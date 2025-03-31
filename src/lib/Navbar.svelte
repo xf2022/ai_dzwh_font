@@ -5,13 +5,18 @@
         setSessionId,
         getSessionId,
         TODAY,
+        getHistory,
     } from "$stores/sessionStore";
     import type { Session } from "$lib/types";
     import { goto } from "$app/navigation";
     import { get } from "svelte/store";
+    import { page } from "$app/state";
+    import { json } from "@sveltejs/kit";
+    import { showCheckbox } from "$stores/conversation";
 
     const sessionId = getSessionId();
     const sessions = getSessions();
+    const history = getHistory();
 
     function navigateToConversation(sid: string) {
         // 判断sid 是否为 sessionId
@@ -35,6 +40,13 @@
         add_session(TODAY, s);
     }
 
+    let model = $state("database");
+
+    $effect(() => {
+        if ("/ragflow" === page.url.pathname) model = "file";
+        else model = "database";
+    });
+
     interface Conversation {
         id: number;
         question: string;
@@ -51,139 +63,144 @@
     let uid = "1"; // 假设这是你的用户 ID
 
     let conversationHistory: Conversation[] = []; // 存储对话记录
-    let talk = false; //是否进入谈话界面
-    let errorMessage = ""; // 用于存储错误信息
 
-    let showConfirm = false;
-    let showCheckbox = false; // 控制勾选框显示
-    let showConfirm_ppt = false;
+    let showConfirm = $state(false);
+    let showConfirmPPT = $state(false);
+
+    // async function switchView(view: string) {
+    //     currentView = view;
+
+    //     if (view === "trainingData") {
+    //         const response = await fetch("/api/v0/get_training_data");
+    //         const data = await response.json();
+
+    //         if (data.type === "df") {
+    //             trainingData = JSON.parse(data.df); // 解析数据并赋值给 trainingData
+    //         }
+    //     }
+    // }
 
     // 显示确认框
     function showReportConfirm() {
-        showCheckbox = true; // 显示勾选框
+        showCheckbox.set(true);
         showConfirm = true; // 显示确认框
-    }
-
-    async function switchView(view: string) {
-        currentView = view;
-
-        if (view === "trainingData") {
-            const response = await fetch("/api/v0/get_training_data");
-            const data = await response.json();
-
-            if (data.type === "df") {
-                trainingData = JSON.parse(data.df); // 解析数据并赋值给 trainingData
-            }
-        }
     }
 
     // 取消生成报告
     function cancelReport() {
         showConfirm = false;
-        showCheckbox = false; // 隐藏勾选框
+        showCheckbox.set(false);
     }
 
     // 生成报告
     async function generateReport() {
-        const selectedEntries = conversationHistory.filter(
-            (entry) => entry.selected,
-        );
-
         // 创建一个新的列表，用于保持顺序
         const reportList: string[] = [];
 
-        selectedEntries.forEach((entry) => {
-            // 先加入 question
-            reportList.push(entry.question);
+        const historyList = get(history);
 
-            const pdDataStr = JSON.stringify(entry.pd_data); // 将 pd_data 转换为字符串
-            const summaryStr = entry.summary; // summary 已经是字符串
+        if (historyList.length > 0) {
+            historyList.forEach((item, index) => {
+                if ("assistant" === item.role) {
+                    if ("string" !== typeof item.content) {
+                        if (item.content.isSelected) {
+                            const question =
+                                historyList[index - 1].content.toString();
+                            const pdData = JSON.stringify(item.content.pdData);
+                            const summary = item.content.summary;
+                            reportList.push(question);
+                            reportList.push(
+                                `数据表数据:${pdData}\n\n数据表的总结:${summary}`,
+                            );
+                            item.content.isSelected = false;
+                        }
+                    }
+                }
+            });
+            if (reportList.length > 0) {
+                // 后端接口调用，传递报告列表生成文档
+                const response = await fetch("/api/v0/generate_word", {
+                    method: "POST",
+                    body: JSON.stringify({ reportList }),
+                    headers: { "Content-Type": "application/json" },
+                });
 
-            // 合并 pd_data 和 summary，形成一个字符串
-            const pdSummaryStr = `查到的数据表: ${pdDataStr}\n数据表的总结: ${summaryStr}`;
-
-            // 将合并后的字符串添加到 reportList
-            reportList.push(pdSummaryStr);
-        });
-
-        // 后端接口调用，传递报告列表生成文档
-        const response = await fetch("/api/v0/generate_word", {
-            method: "POST",
-            body: JSON.stringify({ reportList }),
-            headers: { "Content-Type": "application/json" },
-        });
-
-        if (response.ok) {
-            const blob = await response.blob();
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = "财务分析报告.docx";
-            link.click();
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const link = document.createElement("a");
+                    link.href = URL.createObjectURL(blob);
+                    link.download = "财务分析报告.docx";
+                    link.click();
+                }
+            }
         }
-
         // 隐藏确认框和勾选框
-        showConfirm = false;
-        showCheckbox = false;
+        cancelReport();
     }
 
-    async function generatePPT() {
-        const selectedEntries = conversationHistory.filter(
-            (entry) => entry.selected,
-        );
-
-        // 创建一个新的列表，用于保持顺序
-        const reportList: string[] = [];
-
-        selectedEntries.forEach((entry) => {
-            // 先加入 question
-            reportList.push(entry.question);
-
-            const pdDataStr = JSON.stringify(entry.pd_data); // 将 pd_data 转换为字符串
-            const summaryStr = entry.summary; // summary 已经是字符串
-
-            // 合并 pd_data 和 summary，形成一个字符串
-            const pdSummaryStr = `查到的数据表: ${pdDataStr}\n数据表的总结: ${summaryStr}`;
-
-            // 将合并后的字符串添加到 reportList
-            reportList.push(pdSummaryStr);
-        });
-
-        // 后端接口调用，传递报告列表生成文档
-        const response = await fetch("/api/v0/generate_PPT", {
-            method: "POST",
-            body: JSON.stringify({ reportList }),
-            headers: { "Content-Type": "application/json" },
-        });
-
-        if (response.ok) {
-            const blob = await response.blob();
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = "财务分析报告.pptx";
-            link.click();
-        }
-
-        // 隐藏确认框和勾选框
-        showConfirm_ppt = false;
-        showCheckbox = false;
-    }
-
-    function showReportConfirm_ppt() {
-        showCheckbox = true; // 显示勾选框
-        showConfirm_ppt = true; // 显示确认框
+    function showReportConfirmPPT() {
+        showCheckbox.set(true);
+        showConfirmPPT = true; // 显示确认框
     }
 
     // 取消生成报告
-    function cancelReport_ppt() {
-        showConfirm_ppt = false;
-        showCheckbox = false; // 隐藏勾选框
+    function cancelReportPPT() {
+        showConfirmPPT = false;
+        showCheckbox.set(false);
     }
 
-    let mode = "database"; // 默认状态为数据库模式
-    // 切换模式函数
+    async function generatePPT() {
+        // 创建一个新的列表，用于保持顺序
+        const reportList: string[] = [];
+
+        const historyList = get(history);
+
+        if (historyList.length > 0) {
+            historyList.forEach((item, index) => {
+                if ("assistant" === item.role) {
+                    if ("string" !== typeof item.content) {
+                        if (item.content.isSelected) {
+                            const question =
+                                historyList[index - 1].content.toString();
+                            const pdData = JSON.stringify(item.content.pdData);
+                            const summary = item.content.summary;
+                            reportList.push(question);
+                            reportList.push(
+                                `数据表数据:${pdData}\n\n数据表的总结:${summary}`,
+                            );
+                            item.content.isSelected = false;
+                        }
+                    }
+                }
+            });
+            if (reportList.length > 0) {
+                // 后端接口调用，传递报告列表生成文档
+                const response = await fetch("/api/v0/generate_PPT", {
+                    method: "POST",
+                    body: JSON.stringify({ reportList }),
+                    headers: { "Content-Type": "application/json" },
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const link = document.createElement("a");
+                    link.href = URL.createObjectURL(blob);
+                    link.download = "财务分析报告.pptx";
+                    link.click();
+                }
+            }
+        }
+        // 隐藏确认框和勾选框
+        cancelReportPPT();
+    }
+
     function toggleMode() {
-        mode = mode === "database" ? "file" : "database";
-        console.log(`切换到: ${mode === "database" ? "数据库" : "文件"}`);
+        model = model === "database" ? "file" : "database";
+        if (model === "database") {
+            goto("/");
+        } else {
+            goto("/ragflow");
+        }
     }
 </script>
 
@@ -222,8 +239,8 @@
                             d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z"
                         ></path>
                     </svg>+
-                    <span class="sr-only">Sidebar</span></button
-                >
+                    <span class="sr-only"> Sidebar </span>
+                </button>
             </div>
         </div>
 
@@ -232,7 +249,6 @@
                 <li>
                     <button
                         class="flex items-center gap-x-3 py-2 px-3 text-sm text-slate-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-900 dark:text-slate-400 dark:hover:text-slate-300 border-t border-b border-gray-200 dark:border-gray-700 w-full"
-                        onclick={() => switchView("trainingData")}
                     >
                         <svg
                             class="w-3.5 h-3.5"
@@ -295,6 +311,21 @@
                             >
                                 {session?.name}
                             </button>
+
+                            <!-- <div class="relative">
+                                <span class="text-xl">...</span>
+                                <div
+                                    class="absolute left-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-[100]"
+                                >
+                                    <ul class="py-2">
+                                        <li
+                                            class="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                        >
+                                            删除
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div> -->
                         </li>
                     {/each}
                 {/if}
@@ -433,7 +464,7 @@
                     <!-- 相对定位，确保模态框基于按钮定位 -->
                     <button
                         class="flex items-center gap-x-3 py-2 px-3 text-sm text-slate-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-900 dark:text-slate-400 dark:hover:text-slate-300 w-full"
-                        onclick={showReportConfirm_ppt}
+                        onclick={showReportConfirmPPT}
                     >
                         <!-- 文档图标 -->
                         <svg
@@ -450,7 +481,7 @@
                         </svg>
                         生成PPT
                     </button>
-                    {#if showConfirm_ppt}
+                    {#if showConfirmPPT}
                         <p class="text-center text-lg mb-4">确认生成PPT?</p>
 
                         <div class="flex justify-center gap-x-1 w-full">
@@ -464,7 +495,7 @@
                             <!-- 取消按钮 -->
                             <button
                                 class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm hover:bg-gray-100 transition duration-200"
-                                onclick={cancelReport_ppt}
+                                onclick={cancelReportPPT}
                             >
                                 取消
                             </button>
@@ -477,7 +508,7 @@
                         onclick={toggleMode}
                     >
                         <div
-                            class="mode-text {mode === 'database'
+                            class="mode-text {model === 'database'
                                 ? 'active'
                                 : ''}"
                         >
@@ -485,15 +516,15 @@
                         </div>
                         <div class="toggle-switch">
                             <div
-                                class="toggle-ball {mode === 'database'
+                                class="toggle-ball {model === 'database'
                                     ? 'left'
                                     : 'right'}"
                             ></div>
                         </div>
                         <div
-                            class="mode-text {mode === 'file' ? 'active' : ''}"
+                            class="mode-text {model === 'file' ? 'active' : ''}"
                         >
-                            文件
+                            知识库
                         </div>
                     </button>
                 </li>

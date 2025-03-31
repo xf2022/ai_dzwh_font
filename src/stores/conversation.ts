@@ -15,3 +15,5 @@ export const toggleLoadingChat = () => {
     _isLoading.update(isLoading => !isLoading)
 }
 
+export const showCheckbox = writable(false);
+

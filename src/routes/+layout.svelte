@@ -17,7 +17,7 @@
 </svelte:head>
 
 <main class="flex h-screen w-full flex-col flex-1">
-    <div class="relative flex h-full w-full flex-row overflow-hidden">
+    <div class="relative flex h-full w-full flex-row">
         <Navbar />
         <div class="flex flex-col flex-1">
             <Header />

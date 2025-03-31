@@ -1,6 +1,8 @@
 <script lang="ts">
+    import { goto } from "$app/navigation";
+    import { page } from "$app/state";
     import type { Conversation } from "$lib/types";
-    import { toggleLoadingChat } from "$stores/conversation";
+    import { isLoadingChat, toggleLoadingChat } from "$stores/conversation";
 
     import {
         getSessionId,
@@ -11,113 +13,13 @@
     } from "$stores/sessionStore";
     import { onMount } from "svelte";
     import { get } from "svelte/store";
-    const sessionId = getSessionId();
-
-    let questionInput = $state("");
-
-    let conversationHistory: Conversation[] = [];
-
-    const sendQuestioin = async () => {
-        toggleLoadingChat();
-        if ("" === get(sessionId)) {
-            const sid = crypto.randomUUID();
-            const name = questionInput.slice(0, 30);
-            const session_resp = await fetch(`/api/sessions/${sid}`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            });
-            const s = await session_resp.json();
-            add_session(TODAY, s);
-        }
-        // 发送请求到后端
-        try {
-            let questionStr = questionInput.toString();
-
-            const conversation: Conversation = {
-                id: "",
-                response: "",
-                tableHeaders: [],
-                showPd: false,
-                pdData: null,
-                showChart: false,
-                chartData: "",
-                summary: "",
-                isSelected: false,
-            };
-            debugger;
-            const response = await fetch(
-                `/api/generate_sql?question=${encodeURIComponent(questionStr)}&&former_doc_list=false&&mode_web=${encodeURIComponent("sql")}`,
-            );
-
-            const data: { id: string; sql: string; text: string } =
-                await response.json();
-            conversation.id = data.id;
-            conversation.response = data.text;
-
-            if (data.sql !== "") {
-                const pd_resp = await fetch(
-                    `/api/chat_sql/${encodeURIComponent(data.id)}`,
-                );
-                const pd_data: { id: string; df: any } = await pd_resp.json();
-                if (pd_data.df.length > 0) {
-                    conversation.tableHeaders =
-                        Object.keys(pd_data.df[0]) ?? [];
-                    conversation.pdData = pd_data.df;
-                    conversation.showPd = true;
-                }
-
-                if (pd_data.df) {
-                    const chart_resp = await fetch(
-                        `/api/plotly/${encodeURIComponent(data.id)}?question=${encodeURIComponent(questionInput)}`,
-                    );
-                    const chart_data: {
-                        id: string;
-                        fig: string;
-                        summary: string;
-                    } = await chart_resp.json();
-
-                    conversation.chartData = chart_data.fig;
-                    conversation.showChart = true;
-
-                    conversation.summary = chart_data.summary;
-                }
-                addUserChat(questionStr);
-                addAssistantChat(conversation);
-            } else {
-                addUserChat(questionStr);
-                addAssistantChat(data.text);
-            }
-
-            fetch("/api/sessions/chat", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    user: questionStr,
-                    assistant: data.sql !== "" ? conversation : data.text,
-                }),
-            });
-        } catch (error) {
-            console.error("Fetch错误:", error);
-        }
-        toggleLoadingChat();
-
-        return null;
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-        if (event.key === "Enter") {
-            sendQuestioin();
-        }
-    };
-
-    // 创建语音识别对象（支持的浏览器需要提供 Web Speech API）
-    let recognition: any;
 
     onMount(() => {
+        questionInput = page.state.question || "";
+        if (questionInput !== "") {
+            sendQuestion();
+        }
+
         const recognition = new (window.SpeechRecognition ||
             window.webkitSpeechRecognition)();
 
@@ -137,6 +39,115 @@
             console.error("语音识别错误:", event.error);
         };
     });
+    const isLoading = isLoadingChat();
+    const sessionId = getSessionId();
+
+    let questionInput = $state("");
+
+    const sendQuestion = async () => {
+        if ("" === get(sessionId)) {
+            const sid = crypto.randomUUID();
+            const name = questionInput.slice(0, 30);
+            const session_resp = await fetch(`/api/sessions/${sid}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+            const s = await session_resp.json();
+            add_session(TODAY, s);
+            goto(`/conversation/${sid}`, {
+                state: { question: questionInput },
+            });
+        } else {
+            toggleLoadingChat();
+            try {
+                let questionStr = questionInput.toString();
+                addUserChat(questionStr);
+                const conversation: Conversation = {
+                    id: "",
+                    response: "",
+                    tableHeaders: [],
+                    showPd: false,
+                    pdData: null,
+                    showChart: false,
+                    chartData: "",
+                    summary: "",
+                    isSelected: false,
+                };
+                debugger;
+                const response = await fetch(
+                    `/api/generate_sql?question=${encodeURIComponent(questionStr)}&&former_doc_list=false&&mode_web=${encodeURIComponent("sql")}`,
+                );
+
+                const data: { id: string; sql: string; text: string } =
+                    await response.json();
+                conversation.id = data.id;
+                conversation.response = data.text;
+
+                if (data.sql !== "") {
+                    const pd_resp = await fetch(
+                        `/api/chat_sql/${encodeURIComponent(data.id)}`,
+                    );
+                    const pd_data: { id: string; df: any } =
+                        await pd_resp.json();
+                    if (pd_data.df.length > 0) {
+                        conversation.tableHeaders =
+                            Object.keys(pd_data.df[0]) ?? [];
+                        conversation.pdData = pd_data.df;
+                        conversation.showPd = true;
+                    }
+
+                    if (pd_data.df) {
+                        const chart_resp = await fetch(
+                            `/api/plotly/${encodeURIComponent(data.id)}?question=${encodeURIComponent(questionInput)}`,
+                        );
+                        const chart_data: {
+                            id: string;
+                            fig: string;
+                            summary: string;
+                        } = await chart_resp.json();
+
+                        conversation.chartData = chart_data.fig;
+                        conversation.showChart = true;
+
+                        conversation.summary = chart_data.summary;
+                    }
+                    addAssistantChat(conversation);
+                } else {
+                    addAssistantChat(data.text);
+                }
+
+                fetch("/api/sessions/chat", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        user: questionStr,
+                        assistant: data.sql !== "" ? conversation : data.text,
+                    }),
+                });
+            } catch (error) {
+                console.error("Fetch错误:", error);
+            }
+            toggleLoadingChat();
+            questionInput = "";
+        }
+
+        return null;
+    };
+
+    let conversationHistory: Conversation[] = [];
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+        if (event.key === "Enter") {
+            sendQuestion();
+        }
+    };
+
+    // 创建语音识别对象（支持的浏览器需要提供 Web Speech API）
+    let recognition: any;
 
     // 开始语音识别
     function startSpeechRecognition() {
@@ -153,6 +164,7 @@
         <input
             type="text"
             bind:value={questionInput}
+            disabled={$isLoading}
             onkeydown={handleKeyDown}
             class="p-4 pb-12 block w-full bg-gray-100 border-gray-200 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-800 dark:border-gray-700 dark:text-gray-400"
             placeholder="向我询问有关您的数据的问题，我可以将其转换为 SQL。"
@@ -165,6 +177,7 @@
                 <div class="flex items-center gap-x-1">
                     <button
                         type="button"
+                        disabled={$isLoading}
                         class="inline-flex flex-shrink-0 justify-center items-center size-8 rounded-lg text-gray-500 hover:text-blue-600 focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:hover:text-blue-500 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
                         onclick={startSpeechRecognition}
                         aria-label="Speech Recognition"
@@ -190,7 +203,8 @@
                     </button>
                     <button
                         type="button"
-                        onclick={sendQuestioin}
+                        disabled={$isLoading}
+                        onclick={sendQuestion}
                         class="inline-flex flex-shrink-0 justify-center items-center h-8 w-8 rounded-md text-white bg-blue-600 hover:bg-blue-500 focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                         aria-label="Generate SQL"
                     >

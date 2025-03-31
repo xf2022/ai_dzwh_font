@@ -5,7 +5,11 @@
     let Plotly: any;
     const history = getHistory();
 
-    import { isLoadingChat, type Session } from "$stores/conversation";
+    import {
+        isLoadingChat,
+        showCheckbox,
+        type Session,
+    } from "$stores/conversation";
     import { onMount, tick } from "svelte";
     import type { Conversation } from "$lib/types";
     import { get } from "svelte/store";
@@ -91,7 +95,6 @@
     let header: string = ""; // 存储标题
     let load_questions: string[] = []; // 存储获取的问题
     let conversationHistory: Conversation[] = [];
-    let showCheckbox: boolean = false;
     let response_timeout: boolean = false;
 
     let isPlaying: boolean = false; // 控制语音播放状态
@@ -176,8 +179,23 @@
                             </div>
                         </li>
                     {:else if chat.content.showPd}
+                        <!-- 勾选框, 只有在showCheckbox为true时才显示 -->
+                        {#if $showCheckbox}
+                            <li
+                                class="max-w-4xl px-4 sm:px-6 lg:px-8 mx-auto my-0 flex gap-4 sm:gap-x-4 md:gap-5 lg:gap-6 md:max-w-3xl lg:max-w-[40rem] xl:max-w-[48rem]"
+                            >
+                                <div
+                                    class="flex justify-center h-[2.375rem] w-[2.375rem]"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        bind:checked={chat.content.isSelected}
+                                    />
+                                </div>
+                            </li>
+                        {/if}
                         <li
-                            class="max-w-4xl py-2 px-4 sm:px-6 lg:px-8 mx-auto flex gap-4 md:gap-5 lg:gap-6 md:max-w-3xl lg:max-w-[40rem] xl:max-w-[48rem]"
+                            class="max-w-4xl py-2 px-4 sm:px-6 lg:px-8 mx-auto flex gap-4 sm:gap-x-4 md:gap-5 lg:gap-6 md:max-w-3xl lg:max-w-[40rem] xl:max-w-[48rem]"
                         >
                             <img
                                 src="/conversation/assistant.png"
@@ -295,7 +313,7 @@
                         </li>
                         {#if chat.content.showChart}
                             <li
-                                class="max-w-4xl py-2 px-4 sm:px-6 lg:px-8 mx-auto flex gap-4 md:gap-5 lg:gap-6 md:max-w-3xl lg:max-w-[40rem] xl:max-w-[48rem]"
+                                class="max-w-4xl py-2 px-4 sm:px-6 lg:px-8 mx-auto flex gap-4 sm:gap-x-4 md:gap-5 lg:gap-6 md:max-w-3xl lg:max-w-[40rem] xl:max-w-[48rem]"
                             >
                                 <img
                                     src="/conversation/assistant.png"
@@ -309,7 +327,7 @@
                                 ></div>
                             </li>
                             <li
-                                class="max-w-4xl py-2 px-4 sm:px-6 lg:px-8 mx-auto flex gap-4 md:gap-5 lg:gap-6 md:max-w-3xl lg:max-w-[40rem] xl:max-w-[48rem]"
+                                class="max-w-4xl py-2 px-4 sm:px-6 lg:px-8 mx-auto flex gap-4 sm:gap-x-4 md:gap-5 lg:gap-6 md:max-w-3xl lg:max-w-[40rem] xl:max-w-[48rem]"
                             >
                                 <img
                                     src="/conversation/assistant.png"
