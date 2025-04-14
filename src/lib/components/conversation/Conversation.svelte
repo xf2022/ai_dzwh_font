@@ -359,6 +359,37 @@
                                     </button>
                                 </div>
                             </li>
+                        {:else}
+                            <li
+                                class="max-w-4xl py-2 px-4 sm:px-6 lg:px-8 mx-auto flex gap-4 sm:gap-x-4 md:gap-5 lg:gap-6 md:max-w-3xl lg:max-w-[40rem] xl:max-w-[48rem]"
+                            >
+                                <img
+                                    src="/conversation/assistant.png"
+                                    class="flex-shrink-0 w-[2.375rem] h-[2.375rem]"
+                                    alt="agent logo"
+                                />
+                                <div
+                                    class="space-y-3 overflow-x-auto overflow-y-hidden"
+                                >
+                                    <p
+                                        class="text-gray-800 dark:text-gray-200 font-mono whitespace-pre-wrap"
+                                    >
+                                        {chat.content.response}
+                                    </p>
+                                    <button
+                                        type="button"
+                                        class="mb-2.5 mr-1.5 py-2 px-3 inline-flex justify-center items-center gap-x-2 rounded-md border border-blue-600 bg-white text-blue-600 align-middle hover:bg-blue-50 text-sm dark:bg-slate-900 dark:text-blue-500 dark:border-blue-500 dark:hover:text-blue-400 dark:hover:border-blue-400"
+                                        onclick={() =>
+                                            playText(
+                                                "object" === typeof chat.content
+                                                    ? chat.content.response
+                                                    : "",
+                                            )}
+                                    >
+                                        播放
+                                    </button>
+                                </div>
+                            </li>
                         {/if}
                     {/if}
                 {:else}

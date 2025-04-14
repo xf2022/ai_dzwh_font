@@ -247,8 +247,9 @@
         <div class="overflow-y-auto pb-64">
             <ul class="p-4">
                 <li>
-                    <button
+                    <a
                         class="flex items-center gap-x-3 py-2 px-3 text-sm text-slate-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-900 dark:text-slate-400 dark:hover:text-slate-300 border-t border-b border-gray-200 dark:border-gray-700 w-full"
+                        href="/training-data"
                     >
                         <svg
                             class="w-3.5 h-3.5"
@@ -269,7 +270,7 @@
                             </path>
                         </svg>
                         训练数据
-                    </button>
+                    </a>
                 </li>
                 <li>
                     <button

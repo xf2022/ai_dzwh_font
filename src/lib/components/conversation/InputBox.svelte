@@ -96,9 +96,7 @@
                             Object.keys(pd_data.df[0]) ?? [];
                         conversation.pdData = pd_data.df;
                         conversation.showPd = true;
-                    }
 
-                    if (pd_data.df) {
                         const chart_resp = await fetch(
                             `/api/plotly/${encodeURIComponent(data.id)}?question=${encodeURIComponent(questionInput)}`,
                         );
@@ -110,8 +108,9 @@
 
                         conversation.chartData = chart_data.fig;
                         conversation.showChart = true;
-
                         conversation.summary = chart_data.summary;
+                    } else {
+                        conversation.response = `${data.sql}\n 未查询到相关的数据，请重新提问。`;
                     }
                     addAssistantChat(conversation);
                 } else {

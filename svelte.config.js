@@ -14,7 +14,7 @@ const config = {
 		adapter: adapter(),
 		alias: {
 			'$stores/*': 'src/stores/*',
-		  }
+		}
 	},
 	compilerOptions: {
 		dev: true,  // 确保开发模式开启
